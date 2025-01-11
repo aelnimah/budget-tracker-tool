@@ -36,8 +36,32 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(filepath) # Save the file to the data folder
         data = pd.read_csv(filepath) # Read the file using Pandas
-        return jsonify({'message': 'File uploaded sucessfully', 'data': data.to_dict(orient='records')}), 200
-    
+
+        # Define categories & keywords
+        categories = {
+            "Food": ["groceries", "resturaunt", "cafe"],
+            "Entertainment": ["netflix", "movie", "cinema"],
+            "Transport": ["uber", "taxi", "bus"],
+            "Utilities": ["electricity", "water", "gas"],
+        }
+
+        # Function to categorize transactions
+        def categorize(description):
+            description = description.lower() # Conver to lowercase
+            for category, keywords in categories.items():
+                if any(keyword in description for keyword in keywords):
+                    return category
+                return "Other" # Default category if no match is found
+        
+        # Apply categoization to each row    
+        data["Category"] = data["Description"].apply(categorize)
+
+        # Return the processed data
+        return jsonify({
+            'message': 'File uploaded sucessfully', 
+            'data': data.to_dict(orient='records')
+            }), 200
+
 # Start app if file is run directly
 if __name__ == '__main__':
     app.run(debug=True)
