@@ -51,15 +51,23 @@ def upload_file():
             for category, keywords in categories.items():
                 if any(keyword in description for keyword in keywords):
                     return category
-                return "Other" # Default category if no match is found
+            return "Other" # Default category if no match is found
         
         # Apply categoization to each row    
         data["Category"] = data["Description"].apply(categorize)
 
+        # Calculate spending summaries
+        category_totals = data.groupby("Category")["Amount"].sum().to_dict() # Total by category
+        overall_total = data["Amount"].sum() # Total for all transactions
+
+        # Build summary object 
+        summary = {**category_totals, "Total": overall_total}
+
         # Return the processed data
         return jsonify({
             'message': 'File uploaded sucessfully', 
-            'data': data.to_dict(orient='records')
+            'data': data.to_dict(orient='records'),
+            'summary': summary
             }), 200
 
 # Start app if file is run directly
